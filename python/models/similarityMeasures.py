@@ -1,0 +1,2 @@
+class SimilarityMeasure:
+    pass

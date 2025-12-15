@@ -1,5 +1,6 @@
 # Project models
-from scholarScraperConfig import ScholarScraperConfig
+from models.scholarScraperConfig import ScholarScraperConfig
+from models.paper import Paper
 
 # Selenium imports
 from selenium import webdriver
@@ -25,7 +26,7 @@ class ScholarScraper:
         self.__search_url = ""
 
         # Init webdriver (ALWAYS)
-        self.__webdriver = self._init_webdriver(headless=False)
+        self.__webdriver = self._init_webdriver()
 
         if query:
             self.set_query(query)
@@ -64,45 +65,11 @@ class ScholarScraper:
 
     # -------------------- WebDriver --------------------
     def _init_webdriver(
-        self,
-        headless=True,
-        proxy=None,
-        no_sandbox=True,
-        disable_dev_shm=True,
-        disable_gpu=True,
-        disable_software_rasterizer=True,
-        remote_allow_origins=True,
-        extra_args=None,
+        self
     ):
         if self.config._is_verbose:
             print("Initializing Selenium WebDriver...")
-
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument(
-                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/122.0.0.0 Safari/537.36"
-            )
-        
-        if headless:
-            chrome_options.add_argument("--headless=new")
-        if no_sandbox:
-            chrome_options.add_argument("--no-sandbox")
-        if disable_dev_shm:
-            chrome_options.add_argument("--disable-dev-shm-usage")
-        if disable_gpu:
-            chrome_options.add_argument("--disable-gpu")
-        if disable_software_rasterizer:
-            chrome_options.add_argument("--disable-software-rasterizer")
-        if remote_allow_origins:
-            chrome_options.add_argument("--remote-allow-origins=*")
-        if proxy:
-            chrome_options.add_argument(f"--proxy-server={proxy}")
-        if extra_args:
-            for arg in extra_args:
-                chrome_options.add_argument(arg)
-
-        return webdriver.Chrome(options=chrome_options)
+        return webdriver.Chrome(options=self.config.apply_to_chrome_options())
 
     def _close_webdriver(self):
         if self.config._is_verbose:
@@ -138,31 +105,34 @@ class ScholarScraper:
             print("Page loaded successfully.")
             print("Title:", self.__webdriver.title)
 
-    def scrape_scholar_papers(self, count=10):
+    def scrape_paper_authors(self, paper_node):
+        try:
+            authors_info = paper_node.find_element(By.CSS_SELECTOR, "div.gs_a").text
+            authors = authors_info.split("-")[0].strip()
+            return authors
+        except Exception:
+            return "Unknown"
+        
+    def scrape_scholar_papers(self, count=10,output_format="dict"):
         papers = []
 
         WebDriverWait(self.__webdriver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.gs_r"))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.gs_ri"))
         )
 
-        results = self.__webdriver.find_elements(By.CSS_SELECTOR, "div.gs_r")
+        results = self.__webdriver.find_elements(By.CSS_SELECTOR, "div.gs_ri")
 
         for node in results[:count]:
             title = node.find_element(By.CSS_SELECTOR, "a")
             title_result = title.text
             link_result = title.get_attribute("href")
+            authors = self.scrape_paper_authors(node)
+            description = node.find_element(By.CSS_SELECTOR, "div.gs_rs").text.strip()
+            papers.append(Paper(title_result, link_result, description, authors))
 
-            papers.append({
-                "title": title_result,
-                "link": link_result
-            })
+        if output_format=="json":
+            return [paper.to_json() for paper in papers]
+        
+        if output_format=="dict":
+            return [paper.to_dict() for paper in papers]
 
-        return papers
-
-# Test
-if __name__ == "__main__":
-    config = ScholarScraperConfig(is_verbose=True)
-    scraper = ScholarScraper(config=config)
-    scraper.request_scholar("machine learning")
-    papers = scraper.scrape_scholar_papers(5)
-    print(papers)
