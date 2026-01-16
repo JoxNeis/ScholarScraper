@@ -145,7 +145,7 @@ class ScholarScraper:
                 if self.config._is_verbose: print("Clicking 'Show More'...")
 
                 show_more_btn.click()
-                time.sleep(2)
+                time.sleep(0)
                 
         except Exception as e:
             if self.config._is_verbose: print(f"Stop loading more: {e}")
