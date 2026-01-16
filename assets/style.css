@@ -37,7 +37,6 @@
             transform: translateX(-50%);
         }
 
-        /* --- FORM STYLING --- */
         .search-panel {
             background: #fff;
             padding: 20px;
@@ -63,7 +62,7 @@
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            box-sizing: border-box; /* Agar padding tidak merusak width */
+            box-sizing: border-box; 
             font-size: 14px;
             transition: border 0.3s;
         }
@@ -95,7 +94,6 @@
             cursor: not-allowed;
         }
 
-        /* --- TABLE STYLING --- */
         .results-container {
             overflow-x: auto;
         }
