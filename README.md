@@ -53,11 +53,10 @@ This project aims to simplify academic data collection for intelligent informati
 
 ## Evaluating How Google Scholar's Work
 Evaluating google scholar's web page and how the page work is crucial for automation information retrieval. The evaluation can be accessed [here](documentation/evaluate_web_page.md).
+
 ## Tech Stack
 
 * **Python 3.13**
-* **BeautifulSoup4** – for parsing HTML
-* **Requests** – for handling HTTP requests
 * **Selenium** – for dynamic content scraping
 * **Pandas** – for data organization and export
 
